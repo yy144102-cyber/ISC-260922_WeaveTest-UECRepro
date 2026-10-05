@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "ms-python.python"
+  ],
+  // "KRL" is also the name of an unrelated language (Pico / Kynetx Rule Language).
+  // This extension is for that one, not for KUKA.
+  "unwantedRecommendations": [
+    "picolabs.krl-vs-code"
+  ]
+}

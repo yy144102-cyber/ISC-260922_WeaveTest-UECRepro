@@ -1,0 +1,28 @@
+{
+  // Line endings: files made on the controller are LF; WBead_20260924 is
+  // CRLF ( written in VS Code on the travel PC ). The controller accepts
+  // both ( measured 2026-09-29 by counting bytes ).
+  // New files: LF. Existing files keep their own line endings.
+  "files.eol": "\n",
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": true,
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+
+  // N1: KRL comments must be ASCII. Highlight anything that is not.
+  "editor.unicodeHighlight.nonBasicASCII": true,
+  "editor.unicodeHighlight.ambiguousCharacters": true,
+  "editor.unicodeHighlight.invisibleCharacters": true,
+
+  // indentation used in WBead
+  "editor.detectIndentation": false,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 3,
+  "editor.renderWhitespace": "boundary",
+
+  // Markdown / Python keep their own defaults
+  "[markdown]": { "editor.tabSize": 2, "editor.unicodeHighlight.nonBasicASCII": false },
+  "[python]":   { "editor.tabSize": 4, "editor.unicodeHighlight.nonBasicASCII": false },
+
+  "files.exclude": { "**/__pycache__": true }
+}

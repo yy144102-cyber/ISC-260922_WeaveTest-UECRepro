@@ -1,0 +1,71 @@
+{
+  "version": "2.0.0",
+  // Open THIS folder in VS Code for the tasks to work.
+  // Run from the project folder so every argument can be a relative path.
+  // krlcheck lives in Library ( workspace.md R2: one copy only ).
+  // "python" is called by name, not via ${command:python.interpreterPath}:
+  // that command needs the VS Code Python extension, which this PC does not
+  // have ( 2026-09-29: "command 'python.interpreterPath' not found" ).
+  "options": {
+    "cwd": "${workspaceFolder}",
+    "env": { "PYTHONIOENCODING": "utf-8" }
+  },
+  "tasks": [
+    {
+      "label": "krlcheck: this module (.src + .dat)",
+      // "shell", not "process": with "process", VS Code mistook the absolute
+      // interpreter path for a relative one on the travel PC.
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "../../../Library/.claude/skills/krl-coding-standard/scripts/krlcheck.py",
+        "--format", "vscode",
+        "${relativeFileDirname}/${fileBasenameNoExtension}.src",
+        "${relativeFileDirname}/${fileBasenameNoExtension}.dat"
+      ],
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": {
+        "owner": "krlcheck",
+        "source": "krlcheck",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(error|warning|info)\\s+\\[(\\S+)\\]\\s+(.*)$",
+          "file": 1, "line": 2, "column": 3, "severity": 4, "code": 5, "message": 6
+        }
+      }
+    },
+    {
+      "label": "krlcheck: all programs",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "../../../Library/.claude/skills/krl-coding-standard/scripts/krlcheck.py",
+        "--format", "vscode", "programs"
+      ],
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": {
+        "owner": "krlcheck",
+        "source": "krlcheck",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(error|warning|info)\\s+\\[(\\S+)\\]\\s+(.*)$",
+          "file": 1, "line": 2, "column": 3, "severity": 4, "code": 5, "message": 6
+        }
+      }
+    },
+    {
+      "label": "krlcheck: this module, readable output",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "../../../Library/.claude/skills/krl-coding-standard/scripts/krlcheck.py",
+        "${relativeFileDirname}/${fileBasenameNoExtension}.src",
+        "${relativeFileDirname}/${fileBasenameNoExtension}.dat"
+      ],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    }
+  ]
+}
