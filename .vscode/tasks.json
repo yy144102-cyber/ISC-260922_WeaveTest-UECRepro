@@ -4,8 +4,11 @@
   // Run from the project folder so every argument can be a relative path.
   // krlcheck lives in Library ( workspace.md R2: one copy only ).
   // "python" is called by name, not via ${command:python.interpreterPath}:
-  // that command needs the VS Code Python extension, which this PC does not
-  // have ( 2026-09-29: "command 'python.interpreterPath' not found" ).
+  // that command needs the VS Code Python extension. It was missing on the
+  // desk PC on 2026-09-29 ( "command 'python.interpreterPath' not found" ).
+  // It is installed by 2026-10-17, and VS Code Settings Sync now keeps the
+  // extensions the same on both PCs ( workspace.md R14 ). Calling python by
+  // name still works without the extension, so it stays.
   "options": {
     "cwd": "${workspaceFolder}",
     "env": { "PYTHONIOENCODING": "utf-8" }
