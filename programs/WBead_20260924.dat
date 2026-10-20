@@ -11,7 +11,8 @@ DECL INT SUCCESS
 ;=============================================================
 ; WBead_20260924 - weaving bead deposition   ( data )
 ;
-; VERSION  2026-09-25  scratch - arc not yet struck ( V1 )
+; VERSION  2026-09-25  used for the builds of 2026-09-25
+;          superseded by WBead_20261021 ( see the .src header )
 ;
 ; This file holds ONLY values that do not change while running.
 ; Derived values and run-time state live in WBead.src.
@@ -59,7 +60,9 @@ DECL INT  WB_cyclesPerPass    = 62         ; 62 * 4.0 = 248 mm bead
 DECL INT  WB_numLayers        = 116        ; layers in THIS run ( restart: remaining count )
                                            ; phase 1: 1 / phase 3,4: 116 ( full build )
 DECL REAL WB_liftZMm          = 50.0
-DECL REAL WB_dwellSec         = 30.0
+DECL REAL WB_dwellSec         = 30.0       ; arc on: by the ArcTech source,
+                                           ; preflow and postflow come on top
+                                           ; of this ( read 2026-10-18 )
 
 ;--- direction and mode --------------------------------------
 DECL BOOL WB_progAlongY       = TRUE       ; TRUE = progress along Y, weave along X
@@ -127,8 +130,9 @@ DECL E6POS WB_posHome    = {X 0.0,Y 0.0,Z 1000.0,A -90.0,B 0.0,C 0.0,S 18,T 10,E
 DECL E6POS WB_posRetract = {X 0.0,Y 0.0,Z  700.0,A -90.0,B 0.0,C 0.0,S 18,T 10,E1 0.0,E2 0.0,E3 0.0,E4 0.0,E5 0.0,E6 0.0}
 
 ; Taught on the machine. Z is the top of the substrate, not a calculated value.
-; X -92.75 -> -82.50 : more margin to the edge of the base plate.
-;   Weave spans X -90.00 .. -75.00 ( +/- WB_weaveAmplitudeMm ).
+; X is moved for each wall on the same plate
+;   ( 2026-09-25: -82.50, -45.0, -7.0, 30.5 ).
+;   Weave spans X +/- WB_weaveAmplitudeMm around it ( 23.0 .. 38.0 at 30.5 ).
 DECL E6POS WB_posStart   = {X 30.5,Y 134.50,Z -124.00,A -90.0,B 0.0,C 0.0,S 18,T 10,E1 0.0,E2 0.0,E3 0.0,E4 0.0,E5 0.0,E6 0.0}
 
 ;--- ArcTech data sets -----------------------------------

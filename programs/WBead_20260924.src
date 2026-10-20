@@ -4,8 +4,10 @@ DEF WBead_20260924( )
 ;=============================================================
 ; WBead_20260924 - weaving bead deposition
 ;
-; VERSION  2026-09-25  scratch - arc not yet struck ( V1 )
-;          file name kept: no arc yet, so edited in place
+; VERSION  2026-09-25  used for the builds of 2026-09-25
+;          ( WAAM-1-1 .. WAAM-1-4, values in the Notion build DB )
+;          superseded by WBead_20261021. Kept as the record of
+;          these builds. Comments updated 2026-10-18, code unchanged
 ;
 ; VERIFIED
 ;   stage 0-1  krlcheck ok / compiled on the controller
@@ -16,7 +18,7 @@ DEF WBead_20260924( )
 ;   stage 5    AUTO, POV 100%, 116 layers, dry run, completed
 ;   --- stages 0-5 cover the WB_dryRun = TRUE path only. ---
 ;   The arc path ( WB_ArcOn / WB_ArcOff, WDAT1 ) was added after
-;   stage 5 and is NOT verified yet.
+;   stage 5. It is covered by stages 6b and 7 below.
 ;   2026-09-25 edit: pause after layer WB_pauseAfterLayer,
 ;   WAAM_RSI_ON / WAAM_RSI_OFF enabled, renames
 ;   ( see docs/WBead_naming_review.md ):
@@ -26,10 +28,20 @@ DEF WBead_20260924( )
 ;     count are in the record sheet )
 ;   2026-09-25 WB_pauseEnabled added ( condition only, no new
 ;   motion lines ):
-;     ---  not yet. T1: once TRUE ( pauses ), once FALSE ( runs on )
-;   stage 6a   ---  not yet ( T1, WB_dryRun = FALSE, welding OFF key )
-;   stage 6b   ---  not yet ( 1 layer, arc on )
-;   stage 7    ---  not yet ( all layers, arc on )
+;     ---  not recorded. planned: T1, once TRUE ( pauses ),
+;          once FALSE ( runs on )
+;   stage 6a   ---  not recorded ( T1, WB_dryRun = FALSE,
+;              welding OFF key )
+;   stage 6b   2026-09-25  1 layer, arc on, completed ( WAAM-1-1 )
+;   stage 7    2026-09-25  4, 10 and 116 layers, arc on, completed
+;              ( WAAM-1-2 .. WAAM-1-4 )
+;   stages 6b and 7: mode and POV were not recorded
+;
+;   Read 2026-10-18 in the ArcTech source:
+;   with the arc on, ArcTech waits for the gas postflow in
+;   WB_ArcOff and the preflow in WB_ArcOn, robot stationary.
+;   By the source, these waits come on top of WB_dwellSec.
+;   WBead_20261021 takes them off the WAIT.
 ;
 ; PHASES   ( phase 2 is intentionally unused )
 ;   1  WB_numLayers = 1    WB_dryRun = TRUE    single pass, no arc
