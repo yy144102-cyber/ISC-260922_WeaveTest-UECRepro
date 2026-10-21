@@ -19,11 +19,13 @@ DEF WBead_20261021( )
 ;   stage 5    ---  not yet
 ;   stage 6a   ---  not yet ( T1, WB_dryRun = FALSE, welding OFF key )
 ;   stage 6b   ---  not yet ( 1 layer, arc on )
-;   stage 7    ---  not yet ( all layers, arc on )
+;   stage 7    2026-10-21  50 layers, arc on, completed
+;              ( user report ). mode and POV not recorded
 ;   WB_pauseEnabled  ---  not yet ( T1: once TRUE, once FALSE )
 ;   This version changes only how the wait is computed. No
 ;   machine check is made for that ( decided 2026-10-20 ).
 ;   Results of the previous version: see the WBead_20260924 header.
+;   Superseded by WBead_20261021a ( two weld condition sets ).
 ;
 ; PHASES   ( phase 2 is intentionally unused )
 ;   1  WB_numLayers = 1    WB_dryRun = TRUE    single pass, no arc

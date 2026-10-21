@@ -1,11 +1,14 @@
-# WBead_20261021 の動作解説
+# WBead_20261021a の動作解説
 
-対象: `programs/WBead_20261021.src` / `.dat`（2026-10-18 に `WBead_20260924` から作った版。ファイル名の日付は最初の造形日。値は 2026-09-25 の 116 層の造形のときのもの）
-更新: 2026-10-20（`WBead_20261021` に合わせた）
+対象: `programs/WBead_20261021a.src` / `.dat`（2026-10-21 に `WBead_20261021` から作った、同じ日付の2版目。開始点と層数は 2026-10-21 の 50 層の造形のときの値、ほかは前の版と同じ）
+更新: 2026-10-21（`WBead_20261021a` に合わせた）
 
-**前の版 `WBead_20260924` との違いは、層の間の待ちの計算だけ**（§4-5 の「層の間の待ち」、§4-7 h）。
-ArcTech のソースを読む限り、前の版ではアークありのとき、ガスの前流し・後流し（各 2 秒）の待ちが、待ち時間 30 秒とは別にかかる。
-この版では `WB_interLayerSec` に両方を含め、`WAIT SEC` をその分だけ短くする。動作の命令は変えていない。
+**前の版 `WBead_20261021` との違いは、溶接条件を2組持つことだけ**（§3 の「溶接条件」、§4-7 a、§4-10）。
+1〜5 層は組1（WFS 9.0 m/min、TS 4000 mm/min）、6 層目からは組2（WFS 7.0 m/min、TS 3000 mm/min）で積む。動作の命令は変えていない。
+
+その前の版 `WBead_20260924` からは、`WBead_20261021` で層の間の待ちを変えた。
+ArcTech のソースを読む限り、`WBead_20260924` ではアークありのとき、ガスの前流し・後流し（各 2 秒）の待ちが待ち時間 30 秒とは別にかかる。
+`WBead_20261021` 以降は `WB_interLayerSec` に両方を含め、`WAIT SEC` をその分だけ短くしている（§4-5 の「層の間の待ち」、§4-7 h）。
 
 **場所は行番号ではなく、コードのコメントの見出しで示す**（例:「`;--- frames ---` の区画」）。行番号はコメントを1行足すだけでずれるため。
 規約は `krl-coding-standard` スキルの条項番号で示す（例: S3、M8）。
@@ -46,15 +49,15 @@ ArcTech のソースを読む限り、前の版ではアークありのとき、
 
 | ファイル | 入っているもの | 実行中に変わるか |
 |---|---|---|
-| `.dat` | オペレータが調整する値（区画1）と、ティーチした点・ArcTech のデータ（区画2） | 区画1 と教示点は変わらない（S2）。**例外: `WDAT1`**（下記） |
+| `.dat` | オペレータが調整する値（区画1）と、ティーチした点・ArcTech のデータ（区画2） | 区画1 と教示点は変わらない（S2）。**例外: `WDAT1` / `WDAT2`**（下記） |
 | `.src` | 手順と、実行中に計算する値 | 計算した値は、プログラムが動いている間だけ存在する |
 
 **`.dat` に経路の座標は入っていない。** 経路は `.src` の中で、`.dat` の値から毎回計算する（S3）。
 ウィービングの幅や進み量を変えたいときは `.dat` の値を1つ変えれば、経路全体がそれに従う。
 その代わり、`.dat` を見ても経路は分からない。`.src` にあるのは式だけで、実際の数値は実行して初めて入る。
 
-**例外の `WDAT1`**: ArcTech の溶接データ。`.src` の冒頭で、区画1 の溶接条件（`WB_synergicLine` など）から毎回上書きする。
-オペレータは `WDAT1` を直接触らず、区画1 の値を変える（`.dat` のコメントにも書いてある）。
+**例外の `WDAT1` / `WDAT2`**: ArcTech の溶接データ（`WDAT1` = 溶接条件の組1、`WDAT2` = 組2）。`.src` の冒頭で、区画1 の溶接条件（`WB_synergicLine` など）から毎回上書きする。
+オペレータは `WDAT1` / `WDAT2` を直接触らず、区画1 の値を変える（`.dat` のコメントにも書いてある）。
 
 ---
 
@@ -70,7 +73,7 @@ ArcTech のソースを読む限り、前の版ではアークありのとき、
 | W3D のグローバル変数 | `o…`, `I[]` | W3D のパッケージ | 常に存在 | `oLayerNum`, `I[1]` |
 | サブプログラム | `WB_` + 大文字始まり | `.src` の後ろ | — | `WB_ArcOn`, `WB_ArcOff` |
 
-データの流れは **`.dat` → ローカル変数 → システム変数** の一方向（`WDAT1` だけ例外）。
+データの流れは **`.dat` → ローカル変数 → システム変数** の一方向（`WDAT1` / `WDAT2` だけ例外）。
 W3D のグローバル変数は、宣言がこのプログラムの外にあり、意味は分かっていない（§4-7 b）。
 
 ---
@@ -102,13 +105,13 @@ W3D のグローバル変数は、宣言がこのプログラムの外にあり�
 | 変数 | 値 | 単位 | 現場の単位 | 使いどころ |
 |---|---|---|---|---|
 | `WB_approachMPerSec` | 0.1 | m/s | 6000 mm/min | 溶接していないときの直線動作（開始点への移動、層送り、逃げ） |
-| `WB_tsMPerSec` | 0.0666667 | m/s | 4000 mm/min | 溶接中（ウィービング）の TCP の速さ。`WDAT1.Weld.Velocity` にも入る |
 | `WB_cpAccMPerSec2` | 1.0 | m/s² | — | 直線動作の加速度 |
 | `WB_oriVelDegPerSec` | 100.0 | °/s | — | 姿勢の速度 |
 | `WB_oriAccDegPerSec2` | 100.0 | °/s² | — | 姿勢の加速度 |
 
-`WB_tsMPerSec` は**ジグザグの経路に沿った TCP の速さ**で、壁に沿って進む速さではない。
-1周期で経路を 30.265 mm 動いて 4.0 mm 進むので、壁に沿った正味の速さは 4000 × 4.0 / 30.265 ≒ **529 mm/min**。
+溶接中（ウィービング）の速さ TS は、溶接条件の組ごとに持つ（下の「溶接条件」の `WB_set1TsMPerSec` / `WB_set2TsMPerSec`）。
+TS は**ジグザグの経路に沿った TCP の速さ**で、壁に沿って進む速さではない。
+1周期で経路を 30.265 mm 動いて 4.0 mm 進むので、壁に沿った正味の速さは、組1（4000 mm/min）で 4000 × 4.0 / 30.265 ≒ **529 mm/min**、組2（3000 mm/min）で ≒ **396 mm/min**。
 
 #### 近似（`;--- approximation ---`）
 
@@ -124,7 +127,7 @@ W3D のグローバル変数は、宣言がこのプログラムの外にあり�
 | `WB_weaveAmplitudeMm` | 7.5 | mm | 片側の振幅。中心線から ±7.5 mm 振る（振れの全体は 15 mm） |
 | `WB_layerStepMm` | **1.40** | mm | 層ごとに Z を上げる量（公称。指令値） |
 | `WB_cyclesPerPass` | 62 | 回 | 1層の周期数。62 × 4.0 = 248 mm |
-| `WB_numLayers` | 116 | 層 | **この回に**積む層数（中断から再開するときは残りの層数） |
+| `WB_numLayers` | 50 | 層 | **この回に**積む層数（中断から再開するときは残りの層数） |
 | `WB_liftZMm` | 50.0 | mm | 最後と一時停止のときに上へ逃げる量 |
 | `WB_interLayerSec` | 30.0 | 秒 | 層の間に止めておく時間（狙いの値）。アークありではガスの前流し・後流しを含む（§4-5） |
 
@@ -138,7 +141,7 @@ W3D のグローバル変数は、宣言がこのプログラムの外にあり�
 | 変数 | 値 | 意味 |
 |---|---|---|
 | `WB_progAlongY` | TRUE | TRUE = Base[17] の Y に沿って進み、X に振る。FALSE なら逆 |
-| `WB_firstPassPlus` | FALSE | TRUE = 1層目は進む軸の + 向き。**FALSE = − 向き**。開始点を +Y の端（Y 134.5）に取ったので、1層目は −Y へ進み Y −113.5 で終わる |
+| `WB_firstPassPlus` | FALSE | TRUE = 1層目は進む軸の + 向き。**FALSE = − 向き**。開始点を +Y の端（Y 115.0）に取ったので、1層目は −Y へ進み Y −133.0 で終わる |
 | `WB_dryRun` | **FALSE** | TRUE = `WB_ArcOn` / `WB_ArcOff` を呼ばない（空走行）。FALSE でも、実際に点弧するかは ArcTech のステータスキー（AUT ではキースイッチの入力 `$IN[400]`）で決まる |
 
 `WB_firstPassPlus` は、中断から再開するときに「次のビードが進む向き」に合わせる。
@@ -162,16 +165,24 @@ W3D のグローバル変数は、宣言がこのプログラムの外にあり�
 
 #### 溶接条件（`;--- weld conditions ---`）
 
+**溶接条件は2組持つ。** 組1 は `WDAT1` に、組2 は `WDAT2` に入る。
+組1 は 1 層目から `WB_set2FromLayer − 1` 層目まで、組2 は `WB_set2FromLayer` 層目から使う。層は `WB_numLayers` と同じく**この回の層**を数える（中断から再開するときは §4-9）。
+組ごとに違うのは WFS（Ch3）と TS だけで、ほかは両方の組で共通。
+
 | 変数 | 値 | ArcTech | 意味 |
 |---|---|---|---|
-| `WB_synergicLine` | 3727 | Ch2 | iWave のシナジックライン番号（ArcTech 上の名前は "Job Number"） |
-| `WB_hotWfsMPerMin` | 9.0 | Ch3 | ホットワイヤの送り速度 [m/min] |
-| `WB_coldWfsMPerMin` | 0.0 | Ch4 | コールドワイヤの送り速度。0 = 使わない（UEC は普通の MIG） |
-| `WB_preflowSec` | 2.0 | — | ガスの前流し [秒]。層の間の時間（`WB_interLayerSec`）に含まれる |
-| `WB_postflowSec` | 2.0 | — | ガスの後流し [秒]。同上 |
-| `WB_craterSec` | 0.0 | — | クレータ処理。0 = しない |
+| `WB_set2FromLayer` | 6 | — | 組2 を使い始める層。1 なら全層が組2、`WB_numLayers` より大きければ全層が組1 |
+| `WB_set1HotWfsMPerMin` | 9.0 | Ch3 | 組1 のホットワイヤの送り速度 [m/min] |
+| `WB_set1TsMPerSec` | 0.0666667 | — | 組1 の TS [m/s]（= 4000 mm/min）。`WDAT1.Weld.Velocity` にも入る |
+| `WB_set2HotWfsMPerMin` | 7.0 | Ch3 | 組2 のホットワイヤの送り速度 [m/min] |
+| `WB_set2TsMPerSec` | 0.05 | — | 組2 の TS [m/s]（= 3000 mm/min）。`WDAT2.Weld.Velocity` にも入る |
+| `WB_synergicLine` | 3727 | Ch2 | 両方の組。iWave のシナジックライン番号（ArcTech 上の名前は "Job Number"） |
+| `WB_coldWfsMPerMin` | 0.0 | Ch4 | 両方の組。コールドワイヤの送り速度。0 = 使わない（UEC は普通の MIG） |
+| `WB_preflowSec` | 2.0 | — | 両方の組。ガスの前流し [秒]。層の間の時間（`WB_interLayerSec`）に含まれる |
+| `WB_postflowSec` | 2.0 | — | 両方の組。ガスの後流し [秒]。同上 |
+| `WB_craterSec` | 0.0 | — | 両方の組。クレータ処理。0 = しない |
 
-点弧・溶接・クレータで同じ値を使う。**ガス流量（20 L/min）はレギュレータで設定し、プログラムでは設定しない。**
+1つの組の中では、点弧・溶接・クレータで同じ値を使う。**ガス流量（20 L/min）はレギュレータで設定し、プログラムでは設定しない。**
 
 ### 区画2: 固定データ（`2. FIXED DATA`）
 
@@ -179,8 +190,8 @@ W3D のグローバル変数は、宣言がこのプログラムの外にあり�
 |---|---|---|
 | `WB_posHome` | X0 Y0 Z1000 A−90 B0 C0 / S18 T10 | DryRun の `XHOMEX` の X/Y/Z。A は実機で 180 → −90 に変えた。S/T は実機の `$POS_ACT` と一致を確認 |
 | `WB_posRetract` | X0 Y0 Z700 A−90 B0 C0 / S18 T10 | DryRun の `XHOVERX` |
-| `WB_posStart` | **X30.5** Y134.5 Z−124.0 A−90 B0 C0 / S18 T10 | 実機でティーチ。Z は母材の天端。X は壁ごとに変えた（−82.5 → −45.0 → −7.0 → 30.5） |
-| `WDAT1` / `WP1` | ArcTech のデータ | 構造は ISC の `WVDepositionRJ.dat`（このセルで溶接できた）から。ウィービングの設定は `#None`（ウィービングはロボットの経路で作るため） |
+| `WB_posStart` | **X−90.0 Y115.0 Z−123.5** A−90 B0 C0 / S18 T10 | 実機でティーチ。Z は母材の天端。壁ごとに変える（2026-09-25 は X −82.5 → −45.0 → −7.0 → 30.5、Y 134.5、Z −124.0。2026-10-21 は今の値） |
+| `WDAT1` / `WDAT2` / `WP1` | ArcTech のデータ | `WDAT1` = 組1、`WDAT2` = 組2。`WP1`（シームのデータ）は両方で共通。構造は ISC の `WVDepositionRJ.dat`（このセルで溶接できた）から。ウィービングの設定は `#None`（ウィービングはロボットの経路で作るため） |
 
 座標はすべて Base[17] 基準。`E6POS` は X〜C の位置と姿勢に加えて、S（Status）・T（Turn）と外部軸 E1〜E6 を持つ。
 
@@ -193,15 +204,16 @@ W3D のグローバル変数は、宣言がこのプログラムの外にあり�
 ### 4-1. ヘッダ
 
 `&ACCESS` と `&REL` は制御盤とエディタが管理する行で、手で変えない（V6）。
-`DEF WBead_20261021( )` がプログラムの始まり。名前はファイル名と同じにする（N12）。
+`DEF WBead_20261021a( )` がプログラムの始まり。名前はファイル名と同じにする（N12）。
 
 続くコメントには、動作に関係しない次のことが書いてある。
 
 | 見出し | 中身 |
 |---|---|
-| `VERSION` / `VERIFIED` | 版と検証の段階（T8）。新しい版なので、全段階が「not yet」（V1）。この版の変更は待ちの計算だけなので、そのための実機での確認はしない（2026-10-20 決定）。前の版の結果は `WBead_20260924` のヘッダにある |
+| `VERSION` / `VERIFIED` | 版と検証の段階（T8）。新しい版なので、全段階が「not yet」（V1）。前の版の結果は `WBead_20261021` のヘッダにある |
 | `PHASES` | 段階ごとの `WB_numLayers` と `WB_dryRun` |
 | `ARC` / `RSI` / `PAUSE` | それぞれの動き（§4-7） |
+| `WELD SETS` | 溶接条件の2組と、どの層でどちらを使うか（§3、§4-7 a） |
 | `DWELL` | 層の間の時間にガスの前流し・後流しが含まれること。空走行と溶接 OFF キーのときの違い（§4-5） |
 | `RESTART POLICY` / `RESTART CAUTION` | 中断した造形の再開の手順と注意（§4-9） |
 
@@ -213,6 +225,8 @@ KRL は、実行する文より前に宣言を書く決まりがある。
 |---|---|---|
 | `layerIdx` / `cycIdx` / `axisIdx` | INT | 層・周期・軸のカウンタ |
 | `passPlus` | BOOL | この層が + 向きに進むか |
+| `useSet2` | BOOL | この層で溶接条件の組2 を使うか（§4-7 a） |
+| `tsMPerSec` | REAL | この層の TS（組1 か組2 の値を写す） |
 | `fwdQuarterRise` / `fwdHalfFall` | FRAME | + 向きの層で使う2種類の変位 |
 | `revQuarterRise` / `revHalfFall` | FRAME | − 向きの層で使う同じもの |
 | `quarterRise` / `halfFall` | FRAME | 今の層で使う組（上のどちらかを写す） |
@@ -243,10 +257,11 @@ BAS (#FRAMES, 0)
 **`$BASE = BASE_DATA[17]` と直接書いてはいけない。** Base[17] はポジショナに割り当てられていて、`BAS` はこれを `EK(ポジショナの根元, #EASYS, BASE_DATA[17])` と組み立てる。直接代入するとこれが抜け、`BASE_DATA[17]` の中身（ポジショナのフランジからのずらし量 Z 310.8 mm）を**ロボット自身の根元から**測った位置を指してしまう（実機の `bas.src` で確認）。
 `BAS` は `$LOAD`（ツールと同じ番号の負荷データ）と、smartPAD に表示される現在のツール・ベースも更新する。
 
-**溶接条件を `WDAT1` へ（`;--- weld conditions -> WDAT1 ---`）**
+**溶接条件を `WDAT1` / `WDAT2` へ（`;--- weld conditions -> WDAT1 ( set 1 ), WDAT2 ( set 2 ) ---`）**
 
-区画1 の溶接条件と `WB_tsMPerSec` を `WDAT1` の点弧（Strike）・溶接（Weld）・クレータ（Crater）に書き込む。
-`WB_ArcOn` の中の TRIGGER は先行実行（§4-4 の `$ADVANCE`）の中で `WDAT1` を読むので、**最初の動作命令より前**に置く必要がある。
+区画1 の溶接条件を、組1 は `WDAT1` に、組2 は `WDAT2` に、それぞれ点弧（Strike）・溶接（Weld）・クレータ（Crater）に書き込む。TS は各組の `Weld.Velocity` に入る。
+`WB_ArcOn` の中の TRIGGER は先行実行（§4-4 の `$ADVANCE`）の中で `WDAT1` / `WDAT2` を読むので、**最初の動作命令より前**に置く必要がある。
+2つの組を両方ともここで書いておき、層ごとには**どちらを使うかを選ぶだけ**にする。実行の途中で `WDAT1` の値を書き換える形にはしない（S2、M9）。
 
 **PTP と CP の速度**
 
@@ -353,7 +368,7 @@ LIN WB_posStart
 
 ### 4-7. 層ループ（`FOR layerIdx = 1 TO WB_numLayers`）
 
-#### a. 進む向きを決める
+#### a. 進む向きと溶接条件の組を決める
 
 ```krl
 passPlus = WB_firstPassPlus
@@ -376,6 +391,20 @@ ENDIF
 
 続けて、+ 向きなら fwd の組、− 向きなら rev の組を `quarterRise` / `halfFall` に写す。
 
+溶接条件の組も、同じく**層番号から毎回決める**（`;--- weld condition set ---`）。
+
+```krl
+useSet2 = (layerIdx >= WB_set2FromLayer)
+IF useSet2 THEN
+   tsMPerSec = WB_set2TsMPerSec
+ELSE
+   tsMPerSec = WB_set1TsMPerSec
+ENDIF
+```
+
+`WB_set2FromLayer = 6` なので、1〜5 層目は組1、6 層目からは組2。`useSet2` は `WB_ArcOn` / `WB_ArcOff` に渡してデータセットを選ぶのに使い（§4-10）、`tsMPerSec` はウィービングの速さに使う（d）。
+層の番号は**この回の層**なので、途中から再開するときは `WB_set2FromLayer` も数え直す（§4-9）。
+
 #### b. W3D に層番号を渡す
 
 ```krl
@@ -394,18 +423,18 @@ ISC の `WVDepositionMaster.src` と同じ呼び方。何に使われている�
 ```krl
 WAAM_RSI_ON( )
 IF NOT WB_dryRun THEN
-   WB_ArcOn( )
+   WB_ArcOn(useSet2)
 ENDIF
 ```
 
 - **RSI はアークの外側で ON / OFF する**（ISC の `WVDepositionMaster` と同じ順）。RSI が立ち上がるのにかかる時間を、アークを出したまま止まっているトーチの上ではなく、点弧の前に使うため
 - RSI は W3D の PC（WAAMCtrl）とデータをやり取りするだけで、**経路は補正しない**。空走行でも動く。モード T1 では層ごとに「Caution - sensor correction is activated!!!」が出るが、正常
-- `WB_ArcOn` は ArcTech の ARC ON（§4-10）
+- `WB_ArcOn` は ArcTech の ARC ON（§4-10）。`useSet2` で、この層のデータセット（`WDAT1` か `WDAT2`）を選ぶ
 
 #### d. ウィービング
 
 ```krl
-$VEL.CP = WB_tsMPerSec
+$VEL.CP = tsMPerSec
 
 FOR cycIdx = 1 TO WB_cyclesPerPass
    LIN_REL quarterRise C_DIS #BASE
@@ -423,11 +452,12 @@ ENDFOR
 | `#BASE` | 変位の X/Y/Z を Base[17] の軸の向きで読む |
 
 相対動作なので S/T は要らない（出発点が今の軸の角度そのもの。C3）。
-1周期 30.265 mm ÷ 66.7 mm/s ≒ 0.45 秒、1層で約 **28 秒**。
+組1（66.7 mm/s）: 1周期 30.265 mm ÷ 66.7 mm/s ≒ 0.45 秒、1層で約 **28 秒**。
+組2（50.0 mm/s）: 1周期 ≒ 0.61 秒、1層で約 **38 秒**。
 
 #### e. アークと RSI を OFF、位置決め速度に戻す
 
-`WB_ArcOff`（`WB_dryRun = FALSE` のときだけ）→ `WAAM_RSI_OFF` → `$VEL.CP = WB_approachMPerSec`。
+`WB_ArcOff(useSet2)`（`WB_dryRun = FALSE` のときだけ。ARC ON と同じデータセット）→ `WAAM_RSI_OFF` → `$VEL.CP = WB_approachMPerSec`。
 
 #### f. 層の終わりの位置を記録する
 
@@ -486,7 +516,7 @@ PTP WB_posHome
 ### 4-9. 中断したときの注意（ヘッダの `RESTART POLICY` / `RESTART CAUTION`）
 
 - **必ず先頭から流す。** 途中の行から選ぶと、動作パラメータの設定と経路の計算が飛ばされる
-- 再開の手順: 積めた層を数える → `WB_numLayers` を残りの層数に → `WB_firstPassPlus` を次のビードの向きに → ジョグで実際のビードの天端に合わせて `WB_posStart` を直す → 一時停止の設定を決める → 先頭から流す
+- 再開の手順: 積めた層を数える → `WB_numLayers` を残りの層数に → `WB_firstPassPlus` を次のビードの向きに → ジョグで実際のビードの天端に合わせて `WB_posStart` を直す → 一時停止の設定を決める → `WB_set2FromLayer` をこの回の層で数え直す（すでに組2 の層まで積んでいれば 1） → 先頭から流す
 - **`LIN_REL` を途中で止めて再開すると、その地点から変位がもう一度まるごと実行され、経路がずれる**（M8）。止めて再開すれば元に戻る、ではない
 - 溶接中にエラーで止まったら、そのまま続けない
 
@@ -496,6 +526,12 @@ ArcTech の ARC ON / ARC OFF。**インラインフォームが展開するの�
 ISC の `WVDepositionRJ.src` の `WeldingAct`（このセルで溶接できた）から写した。**手で書き換えない。**
 
 ARC ON は前流しを、ARC OFF は後流しを、ロボットを止めたまま待ってから戻る（§4-5 の「層の間の待ち」）。
+
+**溶接条件の組ごとに、同じ行の組を2つ持つ。** `WB_ArcOn(useSet2)` / `WB_ArcOff(useSet2)` の中で、`useSet2` が TRUE なら `WDAT2` の組、FALSE なら `WDAT1` の組の行を通る。
+`WDAT2` の組は、`WDAT1` の組のデータセット名だけを変えたもの。これはインラインフォームが別のデータセットで展開する形と同じ（実機の `teach\line.src` の `WDAT4` / `WDAT5`）で、ISC の `WVDepositionOJ` の `WeldingAct` も `WDAT1`〜`WDAT4` を同じやり方で選んでいる。
+
+引数 `useSet2` は**どちらの組を通るかを選ぶだけ**で、TRIGGER には渡さない。TRIGGER が読むのは `.dat` の `WDAT1` / `WDAT2` だけ。
+サブプログラムを呼ぶ TRIGGER は割り込みとして扱われ（SI 11.12.1）、割り込みプログラムには `.src` の変数を引数として渡せない（SI 11.11.1）ため。
 
 WorkVisual はこの中の TRIGGER の `ArcGetDelay` / `ArcGetPath` に「The called function … is not hidden」を出すが、誤検出。制御盤は受け付ける。
 
@@ -508,7 +544,7 @@ WorkVisual はこの中の TRIGGER の `ArcGetDelay` / `ArcGetPath` に「The ca
 | `$TOOL` / `$LOAD` | `TOOL_DATA[1]` / `LOAD_DATA[1]`（`BAS(#FRAMES)` が設定） | — | `WB_toolNo` |
 | `$BASE` | `EK(KP1 の根元, #EASYS, BASE_DATA[17])`（同上） | — | `WB_baseNo` |
 | `$VEL_AXIS[1..6]` / `$ACC_AXIS[1..6]` | 10 / 100 | % | `WB_ptpVelPct` / `WB_ptpAccPct` |
-| `$VEL.CP` | 0.1 → 0.0666667（溶接中）→ 0.1 | m/s | `WB_approachMPerSec` / `WB_tsMPerSec` |
+| `$VEL.CP` | 0.1 → 溶接中は組1 で 0.0666667、組2 で 0.05 → 0.1 | m/s | `WB_approachMPerSec` / `WB_set1TsMPerSec` / `WB_set2TsMPerSec` |
 | `$VEL.ORI1` / `ORI2` | 100.0 | °/s | `WB_oriVelDegPerSec` |
 | `$ACC.CP` | 1.0 | m/s² | `WB_cpAccMPerSec2` |
 | `$ACC.ORI1` / `ORI2` | 100.0 | °/s² | `WB_oriAccDegPerSec2` |
@@ -516,7 +552,8 @@ WorkVisual はこの中の TRIGGER の `ArcGetDelay` / `ArcGetPath` に「The ca
 | `$APO.CDIS` | 1.0 | mm | `WB_apoDistMm` |
 | `$ROTSYS` | `#BASE` | — | （固定） |
 | `$ADVANCE` | 3 | — | （固定。制御盤の設定） |
-| `WDAT1`（ArcTech） | Ch2 3727 / Ch3 9.0 / Ch4 0.0、速度 0.0666667、前流し・後流し 2.0、クレータ 0.0 | — | 溶接条件の6つと `WB_tsMPerSec` |
+| `WDAT1`（ArcTech、組1） | Ch2 3727 / Ch3 9.0 / Ch4 0.0、速度 0.0666667、前流し・後流し 2.0、クレータ 0.0 | — | 組1 の WFS・TS と、両方の組に共通の値 |
+| `WDAT2`（ArcTech、組2） | Ch2 3727 / Ch3 7.0 / Ch4 0.0、速度 0.05、前流し・後流し 2.0、クレータ 0.0 | — | 組2 の WFS・TS と、両方の組に共通の値 |
 
 **読み出しているもの**: `$POS_ACT`（層の終わりの**指令位置**）。
 **W3D のグローバル変数に渡しているもの**: `I[1]`, `oLayerNum`, `oSideNum`, `oLayerType`, `oLayerIndex`。
@@ -527,24 +564,26 @@ WorkVisual はこの中の TRIGGER の `ArcGetDelay` / `ArcGetPath` に「The ca
 
 | 区間 | 時間（概算） |
 |---|---|
-| 1層のウィービング（186 本、66.7 mm/s、経路 1876 mm） | 約 28 秒 |
+| 1層のウィービング、組1（186 本、66.7 mm/s、経路 1876 mm） | 約 28 秒 |
+| 1層のウィービング、組2（同じ経路、50.0 mm/s） | 約 38 秒 |
 | 層の間（アークありではガスの前流し・後流し 各 2 秒を含む） | 30 秒 |
 | RSI の ON / OFF と点弧（ガスの時間を除く） | 数秒（未測定） |
 
 | 条件 | 合計（概算。RSI・アークの時間を除く） |
 |---|---|
-| 1層 | 約 1 分 |
-| 116 層 | 116 × 28 + 115 × 30 ≒ 6700 秒 ≒ **約 1 時間 50 分** |
+| 1層（組1） | 約 1 分 |
+| 50 層（1〜5 層が組1、6〜50 層が組2） | 5 × 28 + 45 × 38 + 49 × 30 ≒ 3300 秒 ≒ **約 55 分** |
 
 2026-09-25 の実際の所要時間は記録していない。
-ArcTech のソースの上では、前の版（2026-09-25 の造形に使った版）は、ガスの待ち（各 2 秒）が待ち時間 30 秒とは別にかかる作りになっている。
+ArcTech のソースの上では、`WBead_20260924`（2026-09-25 の造形に使った版）は、ガスの待ち（各 2 秒）が待ち時間 30 秒とは別にかかる作りになっている。
 
 ---
 
 ## 7. 実績と、まだ分かっていないこと
 
 **この版は、まだ実機で動かしていない。**
-前の版 `WBead_20260924` で実機でやったこと（そのヘッダの `VERIFIED` と `CLAUDE.md`）: コンパイル、モード T1 と AUT（POV 100 %）の空走行（1 層と 116 層）、一時停止を入れた空走行、アークを出した造形（1 / 4 / 10 / 116 層。モードと POV は記録なし）。
+前の版 `WBead_20261021` では、2026-10-21 にアークを出して 50 層を造形した。
+その前の版 `WBead_20260924` で実機でやったこと（そのヘッダの `VERIFIED` と `CLAUDE.md`）: コンパイル、モード T1 と AUT（POV 100 %）の空走行（1 層と 116 層）、一時停止を入れた空走行、アークを出した造形（1 / 4 / 10 / 116 層。モードと POV は記録なし）。
 
 | 箇所 | 分かっていないこと | 確かめ方 |
 |---|---|---|

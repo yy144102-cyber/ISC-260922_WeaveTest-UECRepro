@@ -56,7 +56,7 @@ DECL REAL WB_layerStepMm      = 1.40        ; Z raised per layer ( nominal layer
                                            ; NOT a basis for absolute Z.
                                            ; real bead height must be measured.
 DECL INT  WB_cyclesPerPass    = 62         ; 62 * 4.0 = 248 mm bead
-DECL INT  WB_numLayers        = 116        ; layers in THIS run ( restart: remaining count )
+DECL INT  WB_numLayers        = 50         ; layers in THIS run ( restart: remaining count )
                                            ; phase 1: 1 / phase 3,4: 116 ( full build )
 DECL REAL WB_liftZMm          = 50.0
 DECL REAL WB_interLayerSec    = 30.0       ; intended stop between layers,
@@ -69,8 +69,8 @@ DECL BOOL WB_progAlongY       = TRUE       ; TRUE = progress along Y, weave alon
 DECL BOOL WB_firstPassPlus    = FALSE      ; TRUE  = first pass runs toward +Y of Base[17]
                                            ;         (+X when WB_progAlongY = FALSE)
                                            ; FALSE = first pass runs toward -Y
-                                           ; 2026-09: FALSE. WB_posStart is taught at the
-                                           ;   +Y end (Y 134.5), bead 248 mm -> runs to Y -113.5
+                                           ; 2026-10-21: FALSE. WB_posStart is taught at the
+                                           ;   +Y end (Y 115.0), bead 248 mm -> runs to Y -133.0
                                            ; restart: the direction the next bead runs
 DECL BOOL WB_dryRun           = FALSE       ; TRUE  = WB_ArcOn / WB_ArcOff are not called
                                            ; FALSE = they are called. Whether the arc
@@ -131,10 +131,11 @@ DECL E6POS WB_posHome    = {X 0.0,Y 0.0,Z 1000.0,A -90.0,B 0.0,C 0.0,S 18,T 10,E
 DECL E6POS WB_posRetract = {X 0.0,Y 0.0,Z  700.0,A -90.0,B 0.0,C 0.0,S 18,T 10,E1 0.0,E2 0.0,E3 0.0,E4 0.0,E5 0.0,E6 0.0}
 
 ; Taught on the machine. Z is the top of the substrate, not a calculated value.
-; X is moved for each wall on the same plate
-;   ( 2026-09-25: -82.50, -45.0, -7.0, 30.5 ).
-;   Weave spans X +/- WB_weaveAmplitudeMm around it ( 23.0 .. 38.0 at 30.5 ).
-DECL E6POS WB_posStart   = {X 30.5,Y 134.50,Z -124.00,A -90.0,B 0.0,C 0.0,S 18,T 10,E1 0.0,E2 0.0,E3 0.0,E4 0.0,E5 0.0,E6 0.0}
+; Moved for each wall. 2026-09-25 ( one plate ): X -82.50, -45.0,
+;   -7.0, 30.5 at Y 134.50 Z -124.00. 2026-10-21: X -90.0 Y 115.0
+;   Z -123.5.
+;   Weave spans X +/- WB_weaveAmplitudeMm around it ( -97.5 .. -82.5 at -90.0 ).
+DECL E6POS WB_posStart   = {X -90.0,Y 115.0,Z -123.5,A -90.0,B 0.0,C 0.0,S 18,T 10,E1 0.0,E2 0.0,E3 0.0,E4 0.0,E5 0.0,E6 0.0}
 
 ;--- ArcTech data sets -----------------------------------
 ; Structure cloned from ISC WVDepositionRJ.dat, which welded on this cell.
